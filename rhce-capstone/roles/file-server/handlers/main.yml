@@ -1,0 +1,7 @@
+---
+# roles/file_server/handlers/main.yml
+
+- name: Restart NFS Server
+  service:
+    name: nfs-server
+    state: restarted

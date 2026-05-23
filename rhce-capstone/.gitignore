@@ -1,0 +1,12 @@
+# Ignore private cloud keys and identities
+*.pem
+*.id_rsa
+secret_key*
+
+# Ignore local playbook retry streams
+*.retry
+
+# Ignore OS metadata and compression leftovers
+.DS_Store
+*.zip
+*.tar.gz

@@ -1,0 +1,37 @@
+---
+# roles/db_server/tasks/main.yml
+
+- name: Install MariaDB Server packages
+  dnf:
+    name:
+      - mariadb-server
+      - python3-PyMySQL  # Critical for Ansible's mysql_db modules to work
+    state: present
+
+- name: Start and enable MariaDB service
+  service:
+    name: mariadb
+    state: started
+    enabled: true
+
+- name: Allow MariaDB traffic through firewalld
+  firewalld:
+    port: 3306/tcp
+    permanent: true
+    state: enabled
+    immediate: true
+
+- name: Create application database
+  community.mysql.mysql_db:         # <-- Updated this line
+    name: web_app_db
+    state: present
+    login_unix_socket: /var/lib/mysql/mysql.sock
+
+- name: Create database user with access privileges
+  community.mysql.mysql_user:       # <-- Updated this line
+    name: app_user
+    password: "{{ vault_db_password }}"
+    priv: "web_app_db.*:ALL"
+    host: "%" 
+    state: present
+    login_unix_socket: /var/lib/mysql/mysql.sock

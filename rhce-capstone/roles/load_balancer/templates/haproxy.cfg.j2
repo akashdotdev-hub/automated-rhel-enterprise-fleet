@@ -1,0 +1,28 @@
+global
+    log         127.0.0.1 local2
+    chroot      /var/lib/haproxy
+    pidfile     /var/run/haproxy.pid
+    maxconn     4000
+    user        haproxy
+    group       haproxy
+    daemon
+
+defaults
+    mode                    http
+    log                     global
+    option                  httplog
+    option                  dontlognull
+    retries                 3
+    timeout connect         5000ms
+    timeout client          50000ms
+    timeout server          50000ms
+
+frontend http_front
+    bind *:80
+    default_backend web_fleet
+
+backend web_fleet
+    balance roundrobin
+{% for host in groups['webservers'] %}
+    server {{ host }} {{ hostvars[host]['private_ip'] }}:80 check
+{% endfor %}

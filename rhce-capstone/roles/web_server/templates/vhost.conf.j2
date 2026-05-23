@@ -1,0 +1,18 @@
+<VirtualHost *:80>
+    ServerName {{ ansible_host }}
+    Redirect permanent / https://{{ ansible_host }}/
+</VirtualHost>
+
+<VirtualHost *:443>
+    ServerName {{ ansible_host }}
+    DocumentRoot /var/www/html/web_app
+
+    SSLEngine on
+    SSLCertificateFile /etc/pki/tls/certs/web_app.crt
+    SSLCertificateKeyFile /etc/pki/tls/private/web_app.key
+
+    <Directory /var/www/html/web_app>
+        AllowOverride All
+        Require all granted
+    </Directory>
+</VirtualHost>

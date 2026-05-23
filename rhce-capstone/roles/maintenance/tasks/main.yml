@@ -1,0 +1,27 @@
+---
+# roles/maintenance/tasks/main.yml
+
+- name: Create backup script destination directory
+  file:
+    path: /opt/infrastructure/scripts
+    state: directory
+    mode: '0755'
+
+- name: Deploy automated infrastructure backup script
+  template:
+    src: backup_deploy.sh.j2
+    dest: /opt/infrastructure/scripts/backup_deploy.sh
+    mode: '0755'
+
+- name: Schedule automated maintenance Cron Job (Runs every night at midnight)
+  cron:
+    name: "Nightly Enterprise Fleet Backup"
+    minute: "0"
+    hour: "0"
+    job: "/bin/bash /opt/infrastructure/scripts/backup_deploy.sh > /dev/null 2>&1"
+
+- name: Ensure Rsyslog configuration is running and active
+  service:
+    name: rsyslog
+    state: started
+    enabled: true

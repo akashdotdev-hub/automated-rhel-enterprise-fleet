@@ -1,0 +1,32 @@
+---
+# roles/load_balancer/tasks/main.yml
+
+- name: Install HAProxy
+  dnf:
+    name: haproxy
+    state: present
+
+- name: Deploy HAProxy configuration file template
+  template:
+    src: haproxy.cfg.j2
+    dest: /etc/haproxy/haproxy.cfg
+  notify: Restart HAProxy
+
+- name: Open HTTP port in Firewalld for Load Balancer
+  firewalld:
+    port: 80/tcp
+    permanent: true
+    state: enabled
+    immediate: true
+
+- name: Ensure SELinux allows HAProxy to connect to backend network
+  seboolean:
+    name: haproxy_connect_any
+    state: true
+    persistent: true
+
+- name: Start and enable HAProxy service
+  service:
+    name: haproxy
+    state: started
+    enabled: true

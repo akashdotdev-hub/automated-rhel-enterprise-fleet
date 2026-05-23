@@ -1,0 +1,40 @@
+---
+
+# site.yml - Master Infra Playbook
+
+
+- name: Apply Base Hardening to all Enterprise Nodes
+  hosts: all
+  become: true
+  roles:
+    - common
+
+- name: Configure Central File Server
+  hosts: storage
+  become: true
+  roles:
+    - file-server
+
+- name: Configure Secure Database Tier
+  hosts: db
+  become: true
+  roles:
+    - db_server
+
+- name: Configure Scalable Web Cluster
+  hosts: webservers
+  become: true
+  roles:
+    - web_server
+
+- name: Configure High-Availability Front End Load Balancer
+  hosts: lb
+  become: true
+  roles:
+    - load_balancer
+
+- name: Configure Automated Maintenance, Logging, and Fleet Backups
+  hosts: all
+  become: true
+  roles:
+    - maintenance      

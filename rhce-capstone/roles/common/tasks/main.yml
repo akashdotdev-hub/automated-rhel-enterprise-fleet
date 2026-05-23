@@ -1,0 +1,35 @@
+---
+
+# roles/common/tasks/main.yml
+
+
+
+- name: Ensure the Administration Packages are present
+  dnf:
+    name:
+      - firewalld
+      - rsyslog
+      - tar
+      - curl
+    state: present
+
+
+- name: Ensure firewalld is running and enabled
+  service:
+    name: firewalld
+    state: started
+    enabled: true
+
+- name: Secure SSH Configration - Disable root password Login
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?PermitRootLogin'
+    line: 'PermitRootLogin prohibit-password' 
+  notify: Restart SSHD
+
+- name: Ensure SELinux is Set to enforcing mode
+  selinux:
+    policy: targeted
+    state: enforcing  
+        
+

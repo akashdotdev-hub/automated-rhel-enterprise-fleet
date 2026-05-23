@@ -1,0 +1,10 @@
+---
+
+# roles/common/handlers/main.yml
+
+
+
+- name: Restart SSHD
+  service:
+    name: sshd
+    state: restarted  

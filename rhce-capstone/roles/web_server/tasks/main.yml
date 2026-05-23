@@ -1,0 +1,65 @@
+---
+# roles/web_server/tasks/main.yml
+
+- name: Install Apache and SSL module
+  dnf:
+    name:
+      - httpd
+      - mod_ssl
+      - nfs-utils
+    state: present
+
+- name: Ensure SELinux allows Apache to connect to databases and access NFS
+  seboolean:
+    name: "{{ item }}"
+    state: true
+    persistent: true
+  loop:
+    - httpd_can_network_connect
+    - httpd_can_network_connect_db
+    - httpd_use_nfs
+
+- name: Create local mount point directory for web app
+  file:
+    path: /var/www/html/web_app
+    state: directory
+    mode: '0755'
+
+- name: Mount NFS share onto Apache document root
+  mount:
+    path: /var/www/html/web_app
+    src: "{{ hostvars[groups['storage'][0]]['private_ip'] }}:/var/nfsshare/web_app"
+    fstype: nfs
+    opts: defaults
+    state: mounted
+
+- name: Generate self-signed SSL Certificate for HTTPS
+  command: >
+    openssl req -x509 -nodes -days 365 -newkey rsa:2048
+    -keyout /etc/pki/tls/private/web_app.key
+    -out /etc/pki/tls/certs/web_app.crt
+    -subj "/C=IN/ST=Kerala/L=TVM/O=IPSR/CN={{ ansible_host }}"
+  args:
+    creates: /etc/pki/tls/certs/web_app.crt
+
+- name: Deploy Virtual Host configuration template
+  template:
+    src: vhost.conf.j2
+    dest: /etc/httpd/conf.d/vhost.conf
+  notify: Restart Apache
+
+- name: Open Web Ports in Firewalld
+  firewalld:
+    service: "{{ item }}"
+    permanent: true
+    state: enabled
+    immediate: true
+  loop:
+    - http
+    - https
+
+- name: Start and enable Apache HTTPD service
+  service:
+    name: httpd
+    state: started
+    enabled: true

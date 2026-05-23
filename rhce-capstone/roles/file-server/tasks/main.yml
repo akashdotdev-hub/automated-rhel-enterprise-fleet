@@ -1,0 +1,35 @@
+---
+# roles/file_server/tasks/main.yml
+
+- name: Install NFS server utilities
+  dnf:
+    name: nfs-utils
+    state: present
+
+- name: Create the shared web content directory
+  file:
+    path: /var/nfsshare/web_app
+    state: directory
+    mode: '0775'
+    owner: ec2-user
+    group: ec2-user
+
+- name: Configure NFS exports configuration file
+  lineinfile:
+    path: /etc/exports
+    line: "/var/nfsshare/web_app *(rw,sync,no_root_squash,no_all_squash)"
+    create: true
+  notify: Restart NFS Server
+
+- name: Start and enable NFS server service
+  service:
+    name: nfs-server
+    state: started
+    enabled: true
+
+- name: Allow NFS traffic through firewalld
+  firewalld:
+    service: nfs
+    permanent: true
+    state: enabled
+    immediate: true
